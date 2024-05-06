@@ -3,59 +3,62 @@ blueprint:
   description: Turn on lights with a smooth phasing effect when motion is detected and turn off after a specified duration.
   domain: automation
   input:
-    motion_sensor:
-      name: Motion Sensor
-      description: The motion sensor that triggers the light.
+    motion_sensors:
+      name: Motion Sensors
+      description: The motion sensors that trigger the lights.
       selector:
         entity:
           domain: binary_sensor
-    light_entity:
-      name: Light Entity
-      description: The light to be controlled.
+          multiple: true
+    light_entities:
+      name: Light Entities
+      description: The lights to be controlled.
       selector:
         entity:
           domain: light
+          multiple: true
 
 mode: single
 trigger:
-  platform: state
-  entity_id: !input 'motion_sensor'
-  to: "on"
+  - platform: state
+    entity_id: !input 'motion_sensors'
+    to: "on"
 action:
   - variables:
-      light_name: "{{ state_attr(input.light_entity, 'friendly_name') }}"
-  - service: light.turn_on
-    target:
-      entity_id: !input 'light_entity'
-    data:
-      brightness_pct: 1
+      light_names: "{{ expand('entity_id', expand('group', input.light_entities)) | map(attribute='attributes.friendly_name') | list }}"
   - repeat:
       count: 5
       sequence:
+        - choose:
+            - conditions: "{{ trigger.entity_id in state_attr(input.motion_sensors, 'entity_id') }}"
+              sequence:
+                - service: light.turn_on
+                  target:
+                    entity_id: "{{ trigger.entity_id }}"
+                  data:
+                    brightness_pct: >
+                      {{ (repeat.index * 20) + 1 }}
         - delay: "00:00:00.04"  # Adjusted delay for 0.2 seconds total (5 steps)
-        - service: light.turn_on
-          target:
-            entity_id: !input 'light_entity'
-          data:
-            brightness_pct: >
-              {{ (repeat.index * 20) + 1 }}
   - delay: "00:00:10"  # Delay before turning off
   - repeat:
       count: 5
       sequence:
+        - choose:
+            - conditions: "{{ trigger.entity_id in state_attr(input.motion_sensors, 'entity_id') }}"
+              sequence:
+                - service: light.turn_on
+                  target:
+                    entity_id: "{{ trigger.entity_id }}"
+                  data:
+                    brightness_pct: >
+                      {{ 100 - (repeat.index * 20) }}
         - delay: "00:00:00.04"  # Adjusted delay for 0.2 seconds total (5 steps)
-        - service: light.turn_on
-          target:
-            entity_id: !input 'light_entity'
-          data:
-            brightness_pct: >
-              {{ 100 - (repeat.index * 20) }}
   - service: light.turn_off
     target:
-      entity_id: !input 'light_entity'
+      entity_id: !input 'light_entities'
 
 automation:
-  alias: "Motion Hallway Light - {{ light_name }}"
-  description: "Turn on hallway light with a smooth phasing effect when motion is detected and turn off after a specified duration."
+  alias: "Motion-activated Lights - {{ light_names | join(', ') }}"
+  description: "Turn on lights with a smooth phasing effect when motion is detected and turn off after a specified duration."
   use_blueprint:
     path: https://github.com/Juugonomics/hass/edit/main/blueprint1.yaml
