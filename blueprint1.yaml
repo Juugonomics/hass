@@ -1,61 +1,52 @@
 blueprint:
-  name: Motion Activated Lights with Phasing Effect
-  description: Turn on lights with phasing effect when motion is detected and turn off after a specified duration.
+  name: Motion-activated Light with Phasing Effect
+  description: "Turn on lights with phasing effect when motion is detected and turn off after a specified duration."
   domain: automation
   input:
-    motion_sensor:
+    motion_entity:
       name: Motion Sensor
-      description: The binary sensor that detects motion.
+      description: "The binary sensor that detects motion."
       selector:
         entity:
           domain: binary_sensor
-          device_class: motion
-    lights:
-      name: Lights
-      description: Lights to be turned on with phasing effect.
+    light_target:
+      name: Light Target
+      description: "The light to control."
       selector:
-        target:
-          entity:
-            domain: light
-    phasing_duration:
-      name: Phasing Duration
-      description: Duration of the phasing effect (in seconds).
+        entity:
+          domain: light
+    duration:
+      name: Light Duration
+      description: "The duration in seconds to keep the light on after motion is detected."
       default: 30
       selector:
         number:
-          min: 1
+          min: 0
           max: 600
           unit_of_measurement: seconds
-    light_duration:
-      name: Light Duration
-      description: Duration for which the lights should remain on after motion is detected (in seconds).
-      default: 60
-      selector:
-        number:
-          min: 1
-          max: 3600
-          unit_of_measurement: seconds
-automation:
-  - alias: "Motion Activated Lights with Phasing Effect"
-    trigger:
-      platform: state
-      entity_id: !input motion_sensor
-      to: "on"
-    action:
-      - service: light.turn_on
-        target: !input lights
-        data:
-          brightness_pct: 0
-      - repeat:
-          count: "{{ brightness_steps }}"
-          sequence:
-            - delay: "{{ phasing_duration / brightness_steps }}"
-            - service: light.turn_on
-              target: !input lights
-              data:
-                brightness_pct: "{{ ((100 / brightness_steps) * repeat.index) | round(0) }}"
-      - delay: "{{ light_duration }}"
-      - service: light.turn_off
-        target: !input lights
 
-mode: restart
+trigger:
+  platform: state
+  entity_id: !input motion_entity
+  to: "on"
+
+action:
+  - service: light.turn_on
+    target: !input light_target
+    data:
+      brightness_pct: 1
+  - repeat:
+      count: 15  # Adjusted number of steps
+      sequence:
+        - delay: "00:00:00.033"  # Adjust delay time for smoother effect
+        - service: light.turn_on
+          target: !input light_target
+          data:
+            brightness_pct: "{{ (repeat.index * 6.67) + 1 }}"
+  - delay: "00:00:{{ states('input_number.light_duration') | int }}"
+  - service: light.turn_on
+    target: !input light_target
+    data:
+      brightness_pct: 100
+  - service: light.turn_off
+    target: !input light_target
