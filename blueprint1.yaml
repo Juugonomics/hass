@@ -15,7 +15,6 @@ blueprint:
       selector:
         entity:
           domain: light
-  source_url: https://github.com/Juugonomics/hass/raw/main/blueprint1.yaml
 
 mode: single
 trigger:
@@ -23,6 +22,8 @@ trigger:
   entity_id: !input 'motion_sensor'
   to: "on"
 action:
+  - variables:
+      light_name: "{{ state_attr(input.light_entity, 'friendly_name') }}"
   - service: light.turn_on
     target:
       entity_id: !input 'light_entity'
@@ -52,3 +53,9 @@ action:
   - service: light.turn_off
     target:
       entity_id: !input 'light_entity'
+
+automation:
+  alias: "Motion Hallway Light - {{ light_name }}"
+  description: "Turn on hallway light with a smooth phasing effect when motion is detected and turn off after a specified duration."
+  use_blueprint:
+    path: https://github.com/Juugonomics/hass/edit/main/blueprint1.yaml
