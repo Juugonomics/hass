@@ -17,6 +17,15 @@ blueprint:
         entity:
           domain: light
           multiple: true
+    light_on_duration:
+      name: Light On Duration
+      description: The duration (in seconds) the light should remain on after motion is detected.
+      default: 300
+      selector:
+        number:
+          min: 0
+          max: 3600
+          unit_of_measurement: seconds
 
 mode: single
 trigger:
@@ -39,7 +48,7 @@ action:
                     brightness_pct: >
                       {{ (repeat.index * 20) + 1 }}
         - delay: "00:00:00.04"  # Adjusted delay for 0.2 seconds total (5 steps)
-  - delay: "00:00:10"  # Delay before turning off
+  - delay: "00:00:{{ input.light_on_duration }}"  # Delay before turning off
   - repeat:
       count: 5
       sequence:
