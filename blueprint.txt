@@ -1,0 +1,45 @@
+blueprint:
+  name: Motion Activated Lights with Phasing Effect
+  description: Turn on lights with phasing effect when motion is detected and turn off after 1 minute.
+  domain: automation
+  input:
+    motion_sensor:
+      name: Motion Sensor
+      description: The binary sensor that detects motion.
+      selector:
+        entity:
+          domain: binary_sensor
+          device_class: motion
+    lights:
+      name: Lights
+      description: Lights to be turned on with phasing effect.
+      selector:
+        target:
+          entity:
+            domain: light
+action:
+  - alias: "Motion Activated Lights with Phasing Effect"
+    variables:
+      brightness_steps: 10
+      transition_duration: 30 # seconds
+      delay_before_turn_off: 60 # seconds
+    sequence:
+      # Turn on lights with phasing effect
+      - service: light.turn_on
+        target: !input lights
+        data:
+          brightness_pct: 0
+      - repeat:
+          count: "{{ brightness_steps }}"
+          sequence:
+            - delay: "{{ transition_duration / brightness_steps }}"
+            - service: light.turn_on
+              target: !input lights
+              data:
+                brightness_pct: "{{ ((100 / brightness_steps) * repeat.index) | round(0) }}"
+      # Delay for a minute before turning off
+      - delay: "{{ delay_before_turn_off }}"
+      # Turn off lights
+      - service: light.turn_off
+        target: !input lights
+mode: restart
