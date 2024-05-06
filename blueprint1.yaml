@@ -27,7 +27,7 @@ blueprint:
           max: 3600
           unit_of_measurement: seconds
 
-mode: single
+mode: parallel
 trigger:
   - platform: state
     entity_id: !input 'motion_sensors'
@@ -70,4 +70,4 @@ automation:
   alias: "Motion-activated Lights - {{ light_names | join(', ') }}"
   description: "Turn on lights with a smooth phasing effect when motion is detected and turn off after a specified duration."
   use_blueprint:
-    path: https://github.com/Juugonomics/hass/edit/main/blueprint1.yaml
+    path: your-blueprint-url.yaml
