@@ -42,26 +42,26 @@ action:
       phasing_duration: !input phasing_duration
       light_duration: !input light_duration
     choose:
-      - conditions:
+      - conditions: # Indentation fixed here
           condition: trigger
           id: "motion_detected"
-      sequence:
-        # Turn on lights with phasing effect
-        - service: light.turn_on
-          target: !input lights
-          data:
-            brightness_pct: 0
-        - repeat:
-            count: "{{ brightness_steps }}"
-            sequence:
-              - delay: "{{ phasing_duration / brightness_steps }}"
-              - service: light.turn_on
-                target: !input lights
-                data:
-                  brightness_pct: "{{ ((100 / brightness_steps) * repeat.index) | round(0) }}"
-        # Delay for the specified duration before turning off
-        - delay: "{{ light_duration }}"
-        # Turn off lights
-        - service: light.turn_off
-          target: !input lights
+        sequence: # Indentation fixed here
+          # Turn on lights with phasing effect
+          - service: light.turn_on
+            target: !input lights
+            data:
+              brightness_pct: 0
+          - repeat:
+              count: "{{ brightness_steps }}"
+              sequence:
+                - delay: "{{ phasing_duration / brightness_steps }}"
+                - service: light.turn_on
+                  target: !input lights
+                  data:
+                    brightness_pct: "{{ ((100 / brightness_steps) * repeat.index) | round(0) }}"
+          # Delay for the specified duration before turning off
+          - delay: "{{ light_duration }}"
+          # Turn off lights
+          - service: light.turn_off
+            target: !input lights
 mode: restart
