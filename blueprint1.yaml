@@ -42,10 +42,10 @@ action:
       phasing_duration: !input phasing_duration
       light_duration: !input light_duration
     choose:
-      - conditions: # Indentation fixed here
+      - conditions:
           condition: trigger
           id: "motion_detected"
-        sequence: # Indentation fixed here
+        sequence:
           # Turn on lights with phasing effect
           - service: light.turn_on
             target: !input lights
