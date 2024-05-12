@@ -1,0 +1,47 @@
+alias: Control Lights Based on Input Select
+mode: single
+trigger:
+  - platform: state
+    entity_id: input_select.selected_lights
+action:
+  - choose:
+      - conditions:
+          - condition: template
+            value_template: "{{ is_state('input_select.selected_lights', '') }}"
+        sequence:
+          - service: light.turn_on
+            target:
+              entity_id: light.example_light
+            data:
+              brightness_pct: 80
+          - delay: "00:00:02"
+          - service: light.turn_on
+            target:
+              entity_id: light.example_light
+            data:
+              brightness_pct: 60
+          - delay: "00:00:02"
+          - service: light.turn_on
+            target:
+              entity_id: light.example_light
+            data:
+              brightness_pct: 40
+          - delay: "00:00:02"
+          - service: light.turn_on
+            target:
+              entity_id: light.example_light
+            data:
+              brightness_pct: 20
+          - delay: "00:00:02"
+          - service: light.turn_off
+            target:
+              entity_id: light.example_light
+            data: {}
+
+      - conditions:
+          - condition: template
+            value_template: "{{ is_state('input_select.selected_lights', 'other_light_entity_id') }}"
+        sequence:
+          - service: light.toggle
+            target:
+              entity_id: light.other_light_entity_id
