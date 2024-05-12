@@ -1,8 +1,27 @@
-alias: Control Lights Based on Input Select
-mode: single
+blueprint:
+  name: Control Lights Based on Input Select
+  description: |
+    Automatically control lights based on the state of an input select entity.
+  domain: automation
+  input:
+    selected_lights:
+      name: Selected Lights
+      description: The input select entity representing the lights to control.
+      selector:
+        entity:
+          domain: input_select
+    light_entity:
+      name: Light Entity
+      description: The entity ID of the light to control.
+      selector:
+        entity:
+          domain: light
+  source_url: "https://your/source/url"
+
 trigger:
-  - platform: state
-    entity_id: input_select.selected_lights
+  platform: state
+  entity_id: !input 'selected_lights'
+
 action:
   - choose:
       - conditions:
@@ -11,37 +30,36 @@ action:
         sequence:
           - service: light.turn_on
             target:
-              entity_id: light.example_light
+              entity_id: !input 'light_entity'
             data:
               brightness_pct: 80
           - delay: "00:00:02"
           - service: light.turn_on
             target:
-              entity_id: light.example_light
+              entity_id: !input 'light_entity'
             data:
               brightness_pct: 60
           - delay: "00:00:02"
           - service: light.turn_on
             target:
-              entity_id: light.example_light
+              entity_id: !input 'light_entity'
             data:
               brightness_pct: 40
           - delay: "00:00:02"
           - service: light.turn_on
             target:
-              entity_id: light.example_light
+              entity_id: !input 'light_entity'
             data:
               brightness_pct: 20
           - delay: "00:00:02"
           - service: light.turn_off
             target:
-              entity_id: light.example_light
+              entity_id: !input 'light_entity'
             data: {}
-
       - conditions:
           - condition: template
             value_template: "{{ is_state('input_select.selected_lights', 'other_light_entity_id') }}"
         sequence:
           - service: light.toggle
             target:
-              entity_id: light.other_light_entity_id
+              entity_id: !input 'light_entity'
