@@ -1,6 +1,6 @@
 blueprint:
   name: Motion Controlled Lighting with Phasing Effect
-  description: Turn a light on with a phasing effect based on detected motion and turn off after a set duration
+  description: Turn a light on with a phasing effect based on detected motion and turn off with a phasing effect after a set duration
   domain: automation
   input:
     motion_sensor:
@@ -18,16 +18,15 @@ blueprint:
     duration:
       name: Duration
       description: How long the light should stay on for, after motion is detected, before turning off (defaults to 30 seconds)
-      default: '0:00:60'
+      default: '0:00:30'
 
 trigger:
-  - entity_id: !input motion_sensor
-    platform: state
+  - platform: state
+    entity_id: !input motion_sensor
     to: 'on'
-  - entity_id: !input motion_sensor
-    platform: state
+  - platform: state
+    entity_id: !input motion_sensor
     to: 'off'
-    for: !input duration
 
 condition: []
 
@@ -71,9 +70,34 @@ action:
           - condition: state
             entity_id: !input motion_sensor
             state: 'off'
+            for: !input duration
         sequence:
+          - service: light.turn_on
+            target:
+              entity_id: !input light
+            data:
+              brightness_pct: 80
+          - delay: '0.06'
+          - service: light.turn_on
+            target:
+              entity_id: !input light
+            data:
+              brightness_pct: 60
+          - delay: '0.06'
+          - service: light.turn_on
+            target:
+              entity_id: !input light
+            data:
+              brightness_pct: 40
+          - delay: '0.06'
+          - service: light.turn_on
+            target:
+              entity_id: !input light
+            data:
+              brightness_pct: 20
+          - delay: '0.06'
           - service: light.turn_off
             target:
               entity_id: !input light
 
-mode: single
+mode: restart
