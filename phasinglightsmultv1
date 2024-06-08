@@ -1,0 +1,330 @@
+blueprint:
+  name: Motion Controlled Lighting with Phasing Effect and Extra Lights
+  description: Turn lights on with a phasing effect based on detected motion and turn off with a phasing effect after a set duration. Supports up to 3 extra lights with modifiable delay per light.
+  domain: automation
+  input:
+    motion_sensor:
+      name: Motion Sensor
+      description: A sensor that detects motion
+      selector:
+        entity:
+          domain: binary_sensor
+    light:
+      name: Light
+      description: A light that is turned on and off
+      selector:
+        entity:
+          domain: light
+    extra_lights:
+      name: Extra Lights
+      description: Additional lights to be turned on with the same phasing effect (up to 3)
+      selector:
+        entity:
+          domain: light
+          multiple: true
+    duration:
+      name: Duration
+      description: How long the lights should stay on for, after motion is detected, before turning off (defaults to 30 seconds)
+      default: '0:00:30'
+      selector:
+        time:
+    delay_per_light:
+      name: Delay per Light
+      description: Delay in seconds between each light turning on sequence (up to 30 seconds)
+      default: 1
+      selector:
+        number:
+          min: 0
+          max: 30
+          unit_of_measurement: seconds
+          mode: slider
+
+trigger:
+  - platform: state
+    entity_id: !input motion_sensor
+    to: 'on'
+  - platform: state
+    entity_id: !input motion_sensor
+    to: 'off'
+    for: !input duration
+
+condition: []
+
+action:
+  - choose:
+      - conditions:
+          - condition: state
+            entity_id: !input motion_sensor
+            state: 'on'
+        sequence:
+          - service: light.turn_on
+            target:
+              entity_id: !input light
+            data:
+              brightness_pct: 20
+          - delay: '0.06'
+          - service: light.turn_on
+            target:
+              entity_id: !input light
+            data:
+              brightness_pct: 40
+          - delay: '0.06'
+          - service: light.turn_on
+            target:
+              entity_id: !input light
+            data:
+              brightness_pct: 60
+          - delay: '0.06'
+          - service: light.turn_on
+            target:
+              entity_id: !input light
+            data:
+              brightness_pct: 80
+          - delay: '0.06'
+          - service: light.turn_on
+            target:
+              entity_id: !input light
+            data:
+              brightness_pct: 100
+          - variables:
+              delay: !input delay_per_light
+          - choose:
+              - conditions:
+                  - condition: template
+                    value_template: "{{ extra_lights|length > 0 }}"
+                sequence:
+                  - service: light.turn_on
+                    target:
+                      entity_id: "{{ extra_lights[0] }}"
+                    data:
+                      brightness_pct: 20
+                  - delay: '0.06'
+                  - service: light.turn_on
+                    target:
+                      entity_id: "{{ extra_lights[0] }}"
+                    data:
+                      brightness_pct: 40
+                  - delay: '0.06'
+                  - service: light.turn_on
+                    target:
+                      entity_id: "{{ extra_lights[0] }}"
+                    data:
+                      brightness_pct: 60
+                  - delay: '0.06'
+                  - service: light.turn_on
+                    target:
+                      entity_id: "{{ extra_lights[0] }}"
+                    data:
+                      brightness_pct: 80
+                  - delay: '0.06'
+                  - service: light.turn_on
+                    target:
+                      entity_id: "{{ extra_lights[0] }}"
+                    data:
+                      brightness_pct: 100
+              - conditions:
+                  - condition: template
+                    value_template: "{{ extra_lights|length > 1 }}"
+                sequence:
+                  - delay:
+                      seconds: '{{ delay }}'
+                  - service: light.turn_on
+                    target:
+                      entity_id: "{{ extra_lights[1] }}"
+                    data:
+                      brightness_pct: 20
+                  - delay: '0.06'
+                  - service: light.turn_on
+                    target:
+                      entity_id: "{{ extra_lights[1] }}"
+                    data:
+                      brightness_pct: 40
+                  - delay: '0.06'
+                  - service: light.turn_on
+                    target:
+                      entity_id: "{{ extra_lights[1] }}"
+                    data:
+                      brightness_pct: 60
+                  - delay: '0.06'
+                  - service: light.turn_on
+                    target:
+                      entity_id: "{{ extra_lights[1] }}"
+                    data:
+                      brightness_pct: 80
+                  - delay: '0.06'
+                  - service: light.turn_on
+                    target:
+                      entity_id: "{{ extra_lights[1] }}"
+                    data:
+                      brightness_pct: 100
+              - conditions:
+                  - condition: template
+                    value_template: "{{ extra_lights|length > 2 }}"
+                sequence:
+                  - delay:
+                      seconds: '{{ delay * 2 }}'
+                  - service: light.turn_on
+                    target:
+                      entity_id: "{{ extra_lights[2] }}"
+                    data:
+                      brightness_pct: 20
+                  - delay: '0.06'
+                  - service: light.turn_on
+                    target:
+                      entity_id: "{{ extra_lights[2] }}"
+                    data:
+                      brightness_pct: 40
+                  - delay: '0.06'
+                  - service: light.turn_on
+                    target:
+                      entity_id: "{{ extra_lights[2] }}"
+                    data:
+                      brightness_pct: 60
+                  - delay: '0.06'
+                  - service: light.turn_on
+                    target:
+                      entity_id: "{{ extra_lights[2] }}"
+                    data:
+                      brightness_pct: 80
+                  - delay: '0.06'
+                  - service: light.turn_on
+                    target:
+                      entity_id: "{{ extra_lights[2] }}"
+                    data:
+                      brightness_pct: 100
+
+      - conditions:
+          - condition: state
+            entity_id: !input motion_sensor
+            state: 'off'
+            for: !input duration
+        sequence:
+          - service: light.turn_on
+            target:
+              entity_id: !input light
+            data:
+              brightness_pct: 80
+          - delay: '0.06'
+          - service: light.turn_on
+            target:
+              entity_id: !input light
+            data:
+              brightness_pct: 60
+          - delay: '0.06'
+          - service: light.turn_on
+            target:
+              entity_id: !input light
+            data:
+              brightness_pct: 40
+          - delay: '0.06'
+          - service: light.turn_on
+            target:
+              entity_id: !input light
+            data:
+              brightness_pct: 20
+          - delay: '0.06'
+          - service: light.turn_off
+            target:
+              entity_id: !input light
+          - variables:
+              delay: !input delay_per_light
+          - choose:
+              - conditions:
+                  - condition: template
+                    value_template: "{{ extra_lights|length > 0 }}"
+                sequence:
+                  - service: light.turn_on
+                    target:
+                      entity_id: "{{ extra_lights[0] }}"
+                    data:
+                      brightness_pct: 80
+                  - delay: '0.06'
+                  - service: light.turn_on
+                    target:
+                      entity_id: "{{ extra_lights[0] }}"
+                    data:
+                      brightness_pct: 60
+                  - delay: '0.06'
+                  - service: light.turn_on
+                    target:
+                      entity_id: "{{ extra_lights[0] }}"
+                    data:
+                      brightness_pct: 40
+                  - delay: '0.06'
+                  - service: light.turn_on
+                    target:
+                      entity_id: "{{ extra_lights[0] }}"
+                    data:
+                      brightness_pct: 20
+                  - delay: '0.06'
+                  - service: light.turn_off
+                    target:
+                      entity_id: "{{ extra_lights[0] }}"
+              - conditions:
+                  - condition: template
+                    value_template: "{{ extra_lights|length > 1 }}"
+                sequence:
+                  - delay:
+                      seconds: '{{ delay }}'
+                  - service: light.turn_on
+                    target:
+                      entity_id: "{{ extra_lights[1] }}"
+                    data:
+                      brightness_pct: 80
+                  - delay: '0.06'
+                  - service: light.turn_on
+                    target:
+                      entity_id: "{{ extra_lights[1] }}"
+                    data:
+                      brightness_pct: 60
+                  - delay: '0.06'
+                  - service: light.turn_on
+                    target:
+                      entity_id: "{{ extra_lights[1] }}"
+                    data:
+                      brightness_pct: 40
+                  - delay: '0.06'
+                  - service: light.turn_on
+                    target:
+                      entity_id: "{{ extra_lights[1] }}"
+                    data:
+                      brightness_pct: 20
+                  - delay: '0.06'
+                  - service: light.turn_off
+                    target:
+                      entity_id: "{{ extra_lights[1] }}"
+              - conditions:
+                  - condition: template
+                    value_template: "{{ extra_lights|length > 2 }}"
+                sequence:
+                  - delay:
+                      seconds: '{{ delay * 2 }}'
+                  - service: light.turn_on
+                    target:
+                      entity_id: "{{ extra_lights[2] }}"
+                    data:
+                      brightness_pct: 80
+                  - delay: '0.06'
+                  - service: light.turn_on
+                    target:
+                      entity_id: "{{ extra_lights[2] }}"
+                    data:
+                      brightness_pct: 60
+                  - delay: '0.06'
+                  - service: light.turn_on
+                    target:
+                      entity_id: "{{ extra_lights[2] }}"
+                    data:
+                      brightness_pct: 40
+                  - delay: '0.06'
+                  - service: light.turn_on
+                    target:
+                      entity_id: "{{ extra_lights[2] }}"
+                    data:
+                      brightness_pct: 20
+                  - delay: '0.06'
+                  - service: light.turn_off
+                    target:
+                      entity_id: "{{ extra_lights[2] }}"
+
+mode: restart
