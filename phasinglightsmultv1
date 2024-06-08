@@ -24,10 +24,14 @@ blueprint:
           multiple: true
     duration:
       name: Duration
-      description: How long the lights should stay on for, after motion is detected, before turning off (defaults to 30 seconds)
-      default: '0:00:30'
+      description: How long the lights should stay on for, after motion is detected, before turning off (in seconds, defaults to 30 seconds)
+      default: 30
       selector:
-        time:
+        number:
+          min: 1
+          max: 3600
+          unit_of_measurement: seconds
+          mode: slider
     delay_per_light:
       name: Delay per Light
       description: Delay in seconds between each light turning on sequence (up to 30 seconds)
@@ -46,7 +50,8 @@ trigger:
   - platform: state
     entity_id: !input motion_sensor
     to: 'off'
-    for: !input duration
+    for:
+      seconds: !input duration
 
 condition: []
 
@@ -197,7 +202,8 @@ action:
           - condition: state
             entity_id: !input motion_sensor
             state: 'off'
-            for: !input duration
+            for:
+              seconds: !input duration
         sequence:
           - service: light.turn_on
             target:
