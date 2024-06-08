@@ -17,8 +17,8 @@ blueprint:
           domain: light
     duration:
       name: Duration
-      description: How long the light should stay on for, after motion is detected, before turning off (defaults to 30 seconds)
-      default: '0:00:30'
+      description: How long the light should stay on for, after motion is detected, before turning off (defaults to 60 seconds)
+      default: '0:00:60'
 
 trigger:
   - platform: state
