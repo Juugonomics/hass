@@ -1,0 +1,140 @@
+blueprint:
+  name: lighton v2.2
+  description: Turn a light on with a phasing effect based on detected motion and turn off with a phasing effect after a set duration, only during free energy time (between 8 PM and 6 AM) if enabled. Includes a snooze option to pause light activation for a customizable duration.
+  domain: automation
+  input:
+    motion_sensor:
+      name: Motion Sensor
+      description: A sensor that detects motion
+      selector:
+        entity:
+          domain: binary_sensor
+    light:
+      name: Light
+      description: A light that is turned on and off
+      selector:
+        entity:
+          domain: light
+    duration:
+      name: Duration
+      description: How long the light should stay on for, after motion is detected, before turning off (defaults to 120 seconds)
+      default: '0:02:00'
+    time_restriction:
+      name: Only activate during free energy time
+      description: Only activate the automation between 8 PM and 6 AM
+      selector:
+        boolean:
+    snooze:
+      name: Enable Snooze
+      description: Pause light activation for a customizable duration when enabled
+      selector:
+        boolean:
+      default: false
+    snooze_duration:
+      name: Snooze Duration
+      description: Duration to pause light activation (defaults to 1 hour)
+      default: '1:00:00'
+      selector:
+        time:
+          enable_second: false
+
+trigger:
+  - platform: state
+    entity_id: !input motion_sensor
+    to: 'on'
+  - platform: state
+    entity_id: !input motion_sensor
+    to: 'off'
+    for: !input duration
+
+condition:
+  - condition: template
+    value_template: >
+      {% if is_state('input_boolean.time_restriction', 'on') %}
+        {% set current_time = now().time() %}
+        {% set start_time = strptime('20:00', '%H:%M').time() %}
+        {% set end_time = strptime('06:00', '%H:%M').time() %}
+        {{ (current_time >= start_time) or (current_time < end_time) }}
+      {% else %}
+        true
+      {% endif %}
+  - condition: template
+    value_template: >
+      {% if is_state('input_boolean.snooze', 'on') %}
+        {% set snooze_end_time = (now() - timedelta(hours=(states('input_datetime.snooze_duration') | int))).timestamp() %}
+        {{ as_timestamp(states.automation.lighton_v2_2.attributes.last_triggered) < snooze_end_time }}
+      {% else %}
+        true
+      {% endif %}
+
+action:
+  - choose:
+      - conditions:
+          - condition: state
+            entity_id: !input motion_sensor
+            state: 'on'
+        sequence:
+          - service: light.turn_on
+            target:
+              entity_id: !input light
+            data:
+              brightness_pct: 20
+          - delay: '0.06'
+          - service: light.turn_on
+            target:
+              entity_id: !input light
+            data:
+              brightness_pct: 40
+          - delay: '0.06'
+          - service: light.turn_on
+            target:
+              entity_id: !input light
+            data:
+              brightness_pct: 60
+          - delay: '0.06'
+          - service: light.turn_on
+            target:
+              entity_id: !input light
+            data:
+              brightness_pct: 80
+          - delay: '0.06'
+          - service: light.turn_on
+            target:
+              entity_id: !input light
+            data:
+              brightness_pct: 100
+      - conditions:
+          - condition: state
+            entity_id: !input motion_sensor
+            state: 'off'
+            for: !input duration
+        sequence:
+          - service: light.turn_on
+            target:
+              entity_id: !input light
+            data:
+              brightness_pct: 80
+          - delay: '0.06'
+          - service: light.turn_on
+            target:
+              entity_id: !input light
+            data:
+              brightness_pct: 60
+          - delay: '0.06'
+          - service: light.turn_on
+            target:
+              entity_id: !input light
+            data:
+              brightness_pct: 40
+          - delay: '0.06'
+          - service: light.turn_on
+            target:
+              entity_id: !input light
+            data:
+              brightness_pct: 20
+          - delay: '0.06'
+          - service: light.turn_off
+            target:
+              entity_id: !input light
+
+mode: restart
