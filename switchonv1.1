@@ -17,26 +17,21 @@ blueprint:
           domain: switch
     duration:
       name: Duration
-      description: How long the switch should stay on for, after motion is detected, before turning off (defaults to 30 seconds)
-      default: '0:00:30'
+      description: How long the light should stay on for, after motion is detected, before turning off (defaults to 120 seconds)
+      default: '0:02:00'
     time_restriction:
-      name: Time Restriction
-      description: Apply time restriction to operation
-      default: true
+      name: Only activate during free energy time
+      description: Only activate the automation between 8 PM and 6 AM
       selector:
-        boolean: {}
-    start_time:
-      name: Start Time
-      description: Time to start operation (default: 20:00)
-      default: '20:00'
+        entity:
+          domain: input_boolean
+    snooze:
+      name: Enable Snooze
+      description: Pause light activation for 1 hour when enabled
       selector:
-        time: {}
-    end_time:
-      name: End Time
-      description: Time to end operation (default: 06:00)
-      default: '06:00'
-      selector:
-        time: {}
+        entity:
+          domain: input_boolean
+      default: false
 
 trigger:
   - platform: state
@@ -48,16 +43,24 @@ trigger:
     for: !input duration
 
 condition:
-  - condition: or
-    conditions:
-      - condition: not
-        conditions:
-          - condition: state
-            entity_id: input_boolean.time_restriction
-            state: 'on'
-      - condition: time
-        after: !input start_time
-        before: !input end_time
+  - condition: template
+    value_template: >
+      {% if is_state('input_boolean.time_restriction', 'on') %}
+        {% set current_time = now().time() %}
+        {% set start_time = strptime('20:00', '%H:%M').time() %}
+        {% set end_time = strptime('06:00', '%H:%M').time() %}
+        {{ current_time >= start_time or current_time < end_time }}
+      {% else %}
+        true
+      {% endif %}
+  - condition: template
+    value_template: >
+      {% if is_state('input_boolean.snooze', 'on') %}
+        {% set snooze_end_time = (now() - timedelta(hours=1)).timestamp() %}
+        {{ as_timestamp(states.automation.motion_controlled_lighting_with_phasing_effect.attributes.last_triggered) < snooze_end_time }}
+      {% else %}
+        true
+      {% endif %}
 
 action:
   - choose:
