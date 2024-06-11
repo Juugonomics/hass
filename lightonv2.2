@@ -20,24 +20,24 @@ blueprint:
       description: How long the light should stay on for, after motion is detected, before turning off (defaults to 120 seconds)
       default: '0:02:00'
       selector:
-        duration:
+        duration
     time_restriction:
       name: Only activate during free energy time
       description: Only activate the automation between 8 PM and 6 AM
       selector:
-        boolean:
+        boolean
     snooze:
       name: Enable Snooze
       description: Pause light activation for a customizable duration when enabled
       selector:
-        boolean:
+        boolean
       default: false
     snooze_duration:
       name: Snooze Duration
       description: Duration to pause light activation (defaults to 1 hour)
       default: '1:00:00'
       selector:
-        duration:
+        duration
 
 trigger:
   - platform: state
@@ -62,7 +62,7 @@ condition:
   - condition: template
     value_template: >
       {% if is_state('input_boolean.snooze', 'on') %}
-        {% set snooze_end_time = (now() - timedelta(seconds=states('input_datetime.snooze_duration') | int)).timestamp() %}
+        {% set snooze_end_time = (now() - timedelta(seconds=(states('input_datetime.snooze_duration') | int))).timestamp() %}
         {{ as_timestamp(states.automation.lighton_v2_2.attributes.last_triggered) < snooze_end_time }}
       {% else %}
         true
