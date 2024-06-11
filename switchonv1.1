@@ -1,0 +1,54 @@
+blueprint:
+  name: Motion Controlled Switch
+  description: Turn a switch on based on detected motion and turn off after a set duration
+  domain: automation
+  input:
+    motion_sensor:
+      name: Motion Sensor
+      description: A sensor that detects motion
+      selector:
+        entity:
+          domain: binary_sensor
+    switch:
+      name: Switch
+      description: A switch that is turned on and off
+      selector:
+        entity:
+          domain: switch
+    duration:
+      name: Duration
+      description: How long the switch should stay on for, after motion is detected, before turning off (defaults to 30 seconds)
+      default: '0:00:30'
+
+trigger:
+  - platform: state
+    entity_id: !input motion_sensor
+    to: 'on'
+  - platform: state
+    entity_id: !input motion_sensor
+    to: 'off'
+    for: !input duration
+
+condition: []
+
+action:
+  - choose:
+      - conditions:
+          - condition: state
+            entity_id: !input motion_sensor
+            state: 'on'
+        sequence:
+          - service: switch.turn_on
+            target:
+              entity_id: !input switch
+      - conditions:
+          - condition: state
+            entity_id: !input motion_sensor
+            state: 'off'
+            for: !input duration
+        sequence:
+          - service: switch.turn_off
+            target:
+              entity_id: !input switch
+
+mode: restart
