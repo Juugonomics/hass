@@ -22,10 +22,14 @@ blueprint:
     time_restriction:
       name: Only activate during free energy time
       description: Only activate the automation between 8 PM and 6 AM
+      selector:
+        boolean: {}
       default: false
     snooze:
       name: Enable Snooze
       description: Pause light activation for 1 hour when enabled
+      selector:
+        boolean: {}
       default: false
 
 trigger:
