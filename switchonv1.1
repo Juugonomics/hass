@@ -1,6 +1,6 @@
 blueprint:
   name: Motion Controlled Switch
-  description: Turn a switch on based on detected motion and turn off after a set duration
+  description: Turn a switch on based on detected motion and turn off after a set duration, with optional time restriction
   domain: automation
   input:
     motion_sensor:
@@ -19,6 +19,12 @@ blueprint:
       name: Duration
       description: How long the switch should stay on for, after motion is detected, before turning off (defaults to 30 seconds)
       default: '0:00:30'
+    time_restriction:
+      name: Time Restriction
+      description: Apply time restriction to operation
+      default: true
+      selector:
+        boolean: {}
 
 trigger:
   - platform: state
@@ -29,7 +35,18 @@ trigger:
     to: 'off'
     for: !input duration
 
-condition: []
+condition:
+  - condition: or
+    conditions:
+      - condition: not
+        conditions:
+          - condition: state
+            entity_id: input_boolean.time_restriction
+            state: 'on'
+      - condition: time
+        after: '20:00:00'
+      - condition: time
+        before: '06:00:00'
 
 action:
   - choose:
