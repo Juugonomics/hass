@@ -25,6 +25,18 @@ blueprint:
       default: true
       selector:
         boolean: {}
+    start_time:
+      name: Start Time
+      description: Time to start operation (default: 20:00)
+      default: '20:00'
+      selector:
+        time: {}
+    end_time:
+      name: End Time
+      description: Time to end operation (default: 06:00)
+      default: '06:00'
+      selector:
+        time: {}
 
 trigger:
   - platform: state
@@ -44,9 +56,9 @@ condition:
             entity_id: input_boolean.time_restriction
             state: 'on'
       - condition: time
-        after: '20:00:00'
+        after: !input start_time
       - condition: time
-        before: '06:00:00'
+        before: !input end_time
 
 action:
   - choose:
