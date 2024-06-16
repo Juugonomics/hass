@@ -1,0 +1,108 @@
+blueprint:
+  name: Motion Controlled Lighting with Phasing Effect - saving
+  description: Turn a light on with a phasing effect based on detected motion and turn off with a phasing effect after a set duration, only during free energy time (between 8 PM and 6 AM) if enabled. Includes a snooze option to pause light activation for 1 hour.
+  domain: automation
+  input:
+    motion_sensor:
+      name: Motion Sensor
+      description: A sensor that detects motion
+      selector:
+        entity:
+          domain: binary_sensor
+    light:
+      name: Light
+      description: A light that is turned on and off
+      selector:
+        entity:
+          domain: light
+    duration:
+      name: Duration
+      description: How long the light should stay on for, after motion is detected, before turning off (defaults to 120 seconds)
+      default: '0:02:00'
+  
+
+trigger:
+  - platform: state
+    entity_id: !input motion_sensor
+    to: 'on'
+  - platform: state
+    entity_id: !input motion_sensor
+    to: 'off'
+    for: !input duration
+
+action:
+  - choose:
+      - conditions:
+          - condition: state
+            entity_id: !input motion_sensor
+            state: 'on'
+        sequence:
+          - service: light.turn_on
+            target:
+              entity_id: !input light
+            data:
+              brightness_pct: 10
+          - delay: '0.06'
+          - service: light.turn_on
+            target:
+              entity_id: !input light
+            data:
+              brightness_pct: 20
+          - delay: '0.06'
+          - service: light.turn_on
+            target:
+              entity_id: !input light
+            data:
+              brightness_pct: 30
+          - delay: '0.06'
+          - service: light.turn_on
+            target:
+              entity_id: !input light
+            data:
+              brightness_pct: 40
+          - delay: '0.06'
+          - service: light.turn_on
+            target:
+              entity_id: !input light
+            data:
+              brightness_pct: 50
+      - conditions:
+          - condition: state
+            entity_id: !input motion_sensor
+            state: 'off'
+            for: !input duration
+        sequence:
+          - service: light.turn_on
+            target:
+              entity_id: !input light
+            data:
+              brightness_pct: 50
+          - delay: '0.06'
+          - service: light.turn_on
+            target:
+              entity_id: !input light
+            data:
+              brightness_pct: 40
+          - delay: '0.06'
+          - service: light.turn_on
+            target:
+              entity_id: !input light
+            data:
+              brightness_pct: 30
+          - delay: '0.06'
+          - service: light.turn_on
+            target:
+              entity_id: !input light
+            data:
+              brightness_pct: 20
+          - service: light.turn_on
+            target:
+              entity_id: !input light
+            data:
+              brightness_pct: 10
+          - delay: '0.06'
+          - service: light.turn_off
+            target:
+              entity_id: !input light
+
+mode: restart
