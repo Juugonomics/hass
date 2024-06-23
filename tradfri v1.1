@@ -53,8 +53,8 @@ action:
           target:
             entity_id: '{{ LIGHT }}'
           data:
-            brightness_step: 10
-            transition: 0.05
+            brightness_step: '{{ (trigger.event.data.params.rate | float / 10) | round(0, 'floor') * 5 }}'
+            transition: 0.1
         - delay:
             milliseconds: 50
   - alias: Rotation left - dim down
@@ -67,8 +67,8 @@ action:
           target:
             entity_id: '{{ LIGHT }}'
           data:
-            brightness_step: -10
-            transition: 0.05
+            brightness_step: '{{ (trigger.event.data.params.rate | float / -10) | round(0, 'floor') * 5 }}'
+            transition: 0.1
         - delay:
             milliseconds: 50
   default: []
