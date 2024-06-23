@@ -45,31 +45,31 @@ action:
       - conditions: "{{ trigger.event.data.command == 'move_with_on_off' }}"
         sequence:
           - repeat:
-              while: "{{ is_state(LIGHT, 'on') and state_attr(LIGHT, 'brightness') | int != 255 }}"
+              while: "{{ is_state(LIGHT, 'on') }}"
               sequence:
                 - service: light.turn_on
                   target:
                     entity_id: "{{ LIGHT }}"
                   data:
-                    brightness_step: "{{ trigger.event.data.params.rate | float / 5 }}"
-                    transition: 0.3  # Shortened transition time
+                    brightness_step: "{{ trigger.event.data.params.rate | float / 254 * 100 }}"
+                    transition: 0.5
                 - delay:
-                    milliseconds: 300  # Shortened delay time
+                    seconds: 0.5
       - conditions: "{{ trigger.event.data.command == 'move' }}"
         sequence:
           - choose:
-              - conditions: "{{ trigger.event.data.params.rate | float / -10 == 1 and is_state(LIGHT, 'on') }}"
+              - conditions: "{{ trigger.event.data.params.rate == -254 }}"
                 sequence:
                   - service: light.turn_off
                     target:
                       entity_id: "{{ LIGHT }}"
-              - conditions: "{{ trigger.event.data.params.rate | float / 10 == 1 and is_state(LIGHT, 'off') }}"
+              - conditions: "{{ trigger.event.data.params.rate == 254 }}"
                 sequence:
                   - service: light.turn_on
                     target:
                       entity_id: "{{ LIGHT }}"
                     data:
-                      brightness_step: "{{ trigger.event.data.params.rate | float / 5 }}"
-                      transition: 0.3  # Shortened transition time
+                      brightness_step: "{{ trigger.event.data.params.rate | float / 254 * 100 }}"
+                      transition: 0.5
                   - delay:
-                      milliseconds: 300  # Shortened delay time
+                      seconds: 0.5
