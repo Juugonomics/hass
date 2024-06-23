@@ -35,28 +35,28 @@ trigger:
     device_id: !input remote
 action:
 - choose:
-  - alias: Fast rotation right or left with stop - on/off
-    conditions: '{{ trigger.event.data.command == ''move_to_level_with_on_off'' }}'
-    sequence:
-    - service: light.turn_on
-      target:
-        entity_id: '{{ LIGHT }}'
-      data:
-        brightness: '{{ trigger.event.data.params.level }}'
+#  - alias: Fast rotation right or left with stop - on/off
+#    conditions: '{{ trigger.event.data.command == ''move_to_level_with_on_off'' }}'
+#    sequence:
+#    - service: light.turn_on
+#      target:
+#        entity_id: '{{ LIGHT }}'
+#      data:
+#        brightness: '{{ trigger.event.data.params.level }}'
   - alias: Rotation right - dim up
     conditions: '{{ trigger.event.data.command == ''move_with_on_off'' }}'
     sequence:
     - repeat:
-        while: '{{ is_state(LIGHT, ''on'') and state_attr(LIGHT, ''brightness'') | int != 255 }}'
+        while: '{{ state_attr(LIGHT, ''brightness'') | int != 255 }}'
         sequence:
         - service: light.turn_on
           target:
             entity_id: '{{ LIGHT }}'
           data:
             brightness_step: '{{ trigger.event.data.params.rate | float / 5 }}'
-            transition: 0.1
-        - delay:
-            seconds: 0.1
+            transition: 0.3
+  #      - delay:
+  #          seconds: 0.05
   - alias: Rotation left - dim down
     conditions: '{{ trigger.event.data.command == ''move'' }}'
     sequence:
@@ -68,7 +68,7 @@ action:
             entity_id: '{{ LIGHT }}'
           data:
             brightness_step: '{{ trigger.event.data.params.rate | float / -5 }}'
-            transition: 0.1
+            transition: 0.3
         - delay:
-            seconds: 0.1
+            seconds: 0.05
   default: []
