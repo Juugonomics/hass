@@ -47,28 +47,28 @@ action:
     conditions: '{{ trigger.event.data.command == ''move_with_on_off'' }}'
     sequence:
     - repeat:
-        while: '{{ is_state(LIGHT, ''on'') and state_attr(LIGHT, ''brightness'') | int != 255 }}'
+        while: '{{ is_state(LIGHT, ''on'') and state_attr(LIGHT, ''brightness'') | int < 255 }}'
         sequence:
         - service: light.turn_on
           target:
             entity_id: '{{ LIGHT }}'
           data:
-            brightness_step: 5
-            transition: 0.1
+            brightness_step: 10
+            transition: 0.05
         - delay:
-            seconds: 0.1
+            milliseconds: 50
   - alias: Rotation left - dim down
     conditions: '{{ trigger.event.data.command == ''move'' }}'
     sequence:
     - repeat:
-        while: '{{ is_state(LIGHT, ''on'') }}'
+        while: '{{ is_state(LIGHT, ''on'') and state_attr(LIGHT, ''brightness'') | int > 0 }}'
         sequence:
         - service: light.turn_on
           target:
             entity_id: '{{ LIGHT }}'
           data:
-            brightness_step: 5
-            transition: 0.1
+            brightness_step: -10
+            transition: 0.05
         - delay:
-            seconds: 0.1
+            milliseconds: 50
   default: []
