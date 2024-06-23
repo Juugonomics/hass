@@ -70,10 +70,9 @@ action:
                   {% set new_brightness = current_brightness - dim_step %}
                   {{ new_brightness if new_brightness >= 0 else 0 }}
                 {% endif %}
-
           - condition: template
             value_template: "{{ trigger.event.data.subtype == 'left' and state_attr(light_entity, 'brightness') == 0 }}"
-            sequence:
-              - service: light.turn_off
-                data:
-                  entity_id: !input light_entity
+        sequence:
+          - service: light.turn_off
+            data:
+              entity_id: !input light_entity
