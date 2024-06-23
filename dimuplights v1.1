@@ -1,6 +1,7 @@
 blueprint:
   name: Dim Up and Down Light with Steps
-  description: Dim up and dim down a light with specified steps. Turn off the light when brightness is at 0 and dim down. Turn on the light when it's off and dim up.
+  description: >
+    Dim up and dim down a light with specified steps. Turn off the light when brightness is at 0 and dim down. Turn on the light when it's off and dim up.
   domain: automation
   input:
     light_entity:
@@ -14,23 +15,11 @@ blueprint:
       description: Device to trigger dim up action
       selector:
         device:
-    dim_up_device_action:
-      name: Dim Up Device Action
-      description: Action on the device to trigger dim up
-      selector:
-        device_action:
-          device_id: !input dim_up_device
     dim_down_device:
       name: Dim Down Device
       description: Device to trigger dim down action
       selector:
         device:
-    dim_down_device_action:
-      name: Dim Down Device Action
-      description: Action on the device to trigger dim down
-      selector:
-        device_action:
-          device_id: !input dim_down_device
     dim_step:
       name: Dim Step
       description: The amount of brightness to change per step (0-255)
@@ -49,55 +38,50 @@ variables:
 trigger:
   - platform: device
     device_id: !input dim_up_device
-    domain: !input dim_up_device_action.domain
-    type: !input dim_up_device_action.type
-    subtype: !input dim_up_device_action.subtype
+    domain: automation
+    type: execute
+    subtype: dim_up
   - platform: device
     device_id: !input dim_down_device
-    domain: !input dim_down_device_action.domain
-    type: !input dim_down_device_action.type
-    subtype: !input dim_down_device_action.subtype
+    domain: automation
+    type: execute
+    subtype: dim_down
 
 action:
   - choose:
       - conditions:
           - condition: template
-            value_template: "{{ trigger.platform == 'device' and trigger.entity_id == states.device_id }}"
+            value_template: "{{ trigger.platform == 'device' and trigger.device_id == dim_up_device }}"
         sequence:
           - service: light.turn_on
             data_template:
               entity_id: !input light_entity
               brightness: >
                 {% set current_brightness = state_attr(light_entity, 'brightness') | int %}
-                {% set new_brightness = current_brightness + dim_step %}
-                {% if current_brightness == none %}
+                {% if current_brightness is none %}
                   {{ dim_step }}
-                {% elif new_brightness > 255 %}
-                  255
                 {% else %}
-                  {{ new_brightness }}
+                  {% set new_brightness = current_brightness + dim_step %}
+                  {{ new_brightness if new_brightness <= 255 else 255 }}
                 {% endif %}
       - conditions:
           - condition: template
-            value_template: "{{ trigger.platform == 'device' and trigger.entity_id == states.device_id }}"
+            value_template: "{{ trigger.platform == 'device' and trigger.device_id == dim_down_device }}"
         sequence:
           - service: light.turn_on
             data_template:
               entity_id: !input light_entity
               brightness: >
                 {% set current_brightness = state_attr(light_entity, 'brightness') | int %}
-                {% set new_brightness = current_brightness - dim_step %}
-                {% if current_brightness == none or current_brightness == 0 %}
-                  0
-                {% elif new_brightness < 0 %}
+                {% if current_brightness is none or current_brightness == 0 %}
                   0
                 {% else %}
-                  {{ new_brightness }}
+                  {% set new_brightness = current_brightness - dim_step %}
+                  {{ new_brightness if new_brightness >= 0 else 0 }}
                 {% endif %}
           - condition: template
-            value_template: >
-              {% set current_brightness = state_attr(light_entity, 'brightness') | int %}
-              {{ current_brightness == 0 }}
-          - service: light.turn_off
-            data:
-              entity_id: !input light_entity
+            value_template: "{{ state_attr(light_entity, 'brightness') == 0 }}"
+            sequence:
+              - service: light.turn_off
+                data:
+                  entity_id: !input light_entity
