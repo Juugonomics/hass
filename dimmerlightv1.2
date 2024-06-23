@@ -44,17 +44,33 @@ action:
               brightness: "{{ trigger.event.data.params.level }}"
       - conditions: "{{ trigger.event.data.command == 'move_with_on_off' }}"
         sequence:
-          - repeat:
-              while: "{{ is_state(LIGHT, 'on') }}"
-              sequence:
-                - service: light.turn_on
-                  target:
-                    entity_id: "{{ LIGHT }}"
-                  data:
-                    brightness_step: "{{ trigger.event.data.params.rate | float / 254 * 100 }}"
-                    transition: 0.5
-                - delay:
-                    seconds: 0.5
+          - choose:
+              - conditions: "{{ trigger.event.data.params.rate < 0 }}"
+                sequence:
+                  - repeat:
+                      count: "{{ -trigger.event.data.params.rate // 50 }}"
+                      sequence:
+                        - service: light.turn_on
+                          target:
+                            entity_id: "{{ LIGHT }}"
+                          data:
+                            brightness_step: -50
+                            transition: 0.3
+                        - delay:
+                            milliseconds: 300
+              - conditions: "{{ trigger.event.data.params.rate > 0 }}"
+                sequence:
+                  - repeat:
+                      count: "{{ trigger.event.data.params.rate // 50 }}"
+                      sequence:
+                        - service: light.turn_on
+                          target:
+                            entity_id: "{{ LIGHT }}"
+                          data:
+                            brightness_step: 50
+                            transition: 0.3
+                        - delay:
+                            milliseconds: 300
       - conditions: "{{ trigger.event.data.command == 'move' }}"
         sequence:
           - choose:
