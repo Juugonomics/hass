@@ -55,8 +55,8 @@ action:
           data:
             brightness_step: '{{ trigger.event.data.params.rate | float / 10 }}'
             transition: 0.5
-#        - delay:
-#            seconds: 0.5
+        - delay:
+            seconds: 0.1
   - alias: Rotation left - dim down
     conditions: '{{ trigger.event.data.command == ''move'' }}'
     sequence:
@@ -69,6 +69,6 @@ action:
           data:
             brightness_step: '{{ trigger.event.data.params.rate | float / -10 }}'
             transition: 0.5
- #       - delay:
- #           seconds: 0.5
+        - delay:
+            seconds: 0.1
   default: []
