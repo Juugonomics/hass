@@ -16,16 +16,6 @@ blueprint:
       selector:
         device:
 
-    rotate_subtype:
-      name: Rotation Subtype
-      description: Specify rotation subtype ('right' or 'left')
-      default: right
-      selector:
-        select:
-          options:
-            - right
-            - left
-
     dim_step:
       name: Dim Step
       description: The amount of brightness to change per step (0-255)
@@ -46,7 +36,6 @@ trigger:
     device_id: !input rotate_device
     domain: zha
     type: device_rotated
-    subtype: !input rotate_subtype
 
 action:
   - choose:
@@ -83,7 +72,7 @@ action:
                 {% endif %}
 
           - condition: template
-            value_template: "{{ state_attr(light_entity, 'brightness') == 0 }}"
+            value_template: "{{ trigger.event.data.subtype == 'left' and state_attr(light_entity, 'brightness') == 0 }}"
             sequence:
               - service: light.turn_off
                 data:
