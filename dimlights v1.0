@@ -9,16 +9,28 @@ blueprint:
       selector:
         entity:
           domain: light
-    dim_up_trigger:
-      name: Dim Up Trigger
-      description: Trigger to dim up the light
+    dim_up_device:
+      name: Dim Up Device
+      description: Device to trigger dim up action
       selector:
-        entity:
-    dim_down_trigger:
-      name: Dim Down Trigger
-      description: Trigger to dim down the light
+        device:
+    dim_up_device_action:
+      name: Dim Up Device Action
+      description: Action on the device to trigger dim up
       selector:
-        entity:
+        device_action:
+          device_id: !input dim_up_device
+    dim_down_device:
+      name: Dim Down Device
+      description: Device to trigger dim down action
+      selector:
+        device:
+    dim_down_device_action:
+      name: Dim Down Device Action
+      description: Action on the device to trigger dim down
+      selector:
+        device_action:
+          device_id: !input dim_down_device
     dim_step:
       name: Dim Step
       description: The amount of brightness to change per step (0-255)
@@ -35,19 +47,22 @@ variables:
   dim_step: !input dim_step
 
 trigger:
-  - platform: state
-    entity_id: !input dim_up_trigger
-    to: 'on'
-  - platform: state
-    entity_id: !input dim_down_trigger
-    to: 'on'
+  - platform: device
+    device_id: !input dim_up_device
+    domain: !input dim_up_device_action.domain
+    type: !input dim_up_device_action.type
+    subtype: !input dim_up_device_action.subtype
+  - platform: device
+    device_id: !input dim_down_device
+    domain: !input dim_down_device_action.domain
+    type: !input dim_down_device_action.type
+    subtype: !input dim_down_device_action.subtype
 
 action:
   - choose:
       - conditions:
-          - condition: state
-            entity_id: !input dim_up_trigger
-            state: 'on'
+          - condition: template
+            value_template: "{{ trigger.platform == 'device' and trigger.entity_id == states.device_id }}"
         sequence:
           - service: light.turn_on
             data_template:
@@ -63,9 +78,8 @@ action:
                   {{ new_brightness }}
                 {% endif %}
       - conditions:
-          - condition: state
-            entity_id: !input dim_down_trigger
-            state: 'on'
+          - condition: template
+            value_template: "{{ trigger.platform == 'device' and trigger.entity_id == states.device_id }}"
         sequence:
           - service: light.turn_on
             data_template:
