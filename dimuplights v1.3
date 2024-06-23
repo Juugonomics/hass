@@ -1,7 +1,7 @@
 blueprint:
-  name: Dim Up and Down Light with Steps
+  name: Dim Up and Down Light with Rotational Control
   description: >
-    Dim up and dim down a light with specified steps. Turn off the light when brightness is at 0 and dim down. Turn on the light when it's off and dim up.
+    Dim up and dim down a light with specified steps based on device rotation events.
   domain: automation
   input:
     light_entity:
@@ -10,16 +10,22 @@ blueprint:
       selector:
         entity:
           domain: light
-    dim_up_device:
-      name: Dim Up Device
-      description: Device to trigger dim up action
+    rotate_device:
+      name: Rotate Device
+      description: Device ID of the rotating device
       selector:
         device:
-    dim_down_device:
-      name: Dim Down Device
-      description: Device to trigger dim down action
+
+    rotate_subtype:
+      name: Rotation Subtype
+      description: Specify rotation subtype ('right' or 'left')
+      default: right
       selector:
-        device:
+        select:
+          options:
+            - right
+            - left
+
     dim_step:
       name: Dim Step
       description: The amount of brightness to change per step (0-255)
@@ -37,21 +43,16 @@ variables:
 
 trigger:
   - platform: device
-    device_id: !input dim_up_device
-    domain: automation
-    type: execute
-    subtype: dim_up
-  - platform: device
-    device_id: !input dim_down_device
-    domain: automation
-    type: execute
-    subtype: dim_down
+    device_id: !input rotate_device
+    domain: zha
+    type: device_rotated
+    subtype: !input rotate_subtype
 
 action:
   - choose:
       - conditions:
           - condition: template
-            value_template: "{{ trigger.platform == 'device' and trigger.device_id == dim_up_device }}"
+            value_template: "{{ trigger.event.data.subtype == 'right' }}"
         sequence:
           - service: light.turn_on
             data_template:
@@ -64,9 +65,10 @@ action:
                   {% set new_brightness = current_brightness + dim_step %}
                   {{ new_brightness if new_brightness <= 255 else 255 }}
                 {% endif %}
+
       - conditions:
           - condition: template
-            value_template: "{{ trigger.platform == 'device' and trigger.device_id == dim_down_device }}"
+            value_template: "{{ trigger.event.data.subtype == 'left' }}"
         sequence:
           - service: light.turn_on
             data_template:
@@ -79,6 +81,7 @@ action:
                   {% set new_brightness = current_brightness - dim_step %}
                   {{ new_brightness if new_brightness >= 0 else 0 }}
                 {% endif %}
+
           - condition: template
             value_template: "{{ state_attr(light_entity, 'brightness') == 0 }}"
             sequence:
