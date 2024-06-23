@@ -54,9 +54,9 @@ action:
             entity_id: '{{ LIGHT }}'
           data:
             brightness_step: '{{ trigger.event.data.params.rate | float / 4 }}'
-            transition: 0.2
+            transition: 0.5
         - delay:
-            seconds: 0.2
+            seconds: 0.5
   - alias: Rotation left - dim down
     conditions: '{{ trigger.event.data.command == ''move'' }}'
     sequence:
@@ -68,7 +68,7 @@ action:
             entity_id: '{{ LIGHT }}'
           data:
             brightness_step: '{{ trigger.event.data.params.rate | float / -4 }}'
-            transition: 0.2
+            transition: 0.5
         - delay:
-            seconds: 0.2
+            seconds: 0.5
   default: []
