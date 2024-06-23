@@ -1,0 +1,89 @@
+blueprint:
+  name: Dim Up and Down Light with Steps
+  description: Dim up and dim down a light with specified steps. Turn off the light when brightness is at 0 and dim down. Turn on the light when it's off and dim up.
+  domain: automation
+  input:
+    light_entity:
+      name: Light Entity
+      description: The light entity to control
+      selector:
+        entity:
+          domain: light
+    dim_up_trigger:
+      name: Dim Up Trigger
+      description: Trigger to dim up the light
+      selector:
+        entity:
+    dim_down_trigger:
+      name: Dim Down Trigger
+      description: Trigger to dim down the light
+      selector:
+        entity:
+    dim_step:
+      name: Dim Step
+      description: The amount of brightness to change per step (0-255)
+      default: 51
+      selector:
+        number:
+          min: 1
+          max: 255
+          unit_of_measurement: brightness
+          mode: slider
+
+variables:
+  light_entity: !input light_entity
+  dim_step: !input dim_step
+
+trigger:
+  - platform: state
+    entity_id: !input dim_up_trigger
+    to: 'on'
+  - platform: state
+    entity_id: !input dim_down_trigger
+    to: 'on'
+
+action:
+  - choose:
+      - conditions:
+          - condition: state
+            entity_id: !input dim_up_trigger
+            state: 'on'
+        sequence:
+          - service: light.turn_on
+            data_template:
+              entity_id: !input light_entity
+              brightness: >
+                {% set current_brightness = state_attr(light_entity, 'brightness') | int %}
+                {% set new_brightness = current_brightness + dim_step %}
+                {% if current_brightness == none %}
+                  {{ dim_step }}
+                {% elif new_brightness > 255 %}
+                  255
+                {% else %}
+                  {{ new_brightness }}
+                {% endif %}
+      - conditions:
+          - condition: state
+            entity_id: !input dim_down_trigger
+            state: 'on'
+        sequence:
+          - service: light.turn_on
+            data_template:
+              entity_id: !input light_entity
+              brightness: >
+                {% set current_brightness = state_attr(light_entity, 'brightness') | int %}
+                {% set new_brightness = current_brightness - dim_step %}
+                {% if current_brightness == none or current_brightness == 0 %}
+                  0
+                {% elif new_brightness < 0 %}
+                  0
+                {% else %}
+                  {{ new_brightness }}
+                {% endif %}
+          - condition: template
+            value_template: >
+              {% set current_brightness = state_attr(light_entity, 'brightness') | int %}
+              {{ current_brightness == 0 }}
+          - service: light.turn_off
+            data:
+              entity_id: !input light_entity
