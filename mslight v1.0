@@ -1,5 +1,5 @@
 blueprint:
-  name: Light Control with Occupancy Sensor
+  name: light.
   description: Turn on/off a light based on occupancy sensor and adaptive lighting switch with configurable delays.
   domain: automation
   input:
