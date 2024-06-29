@@ -1,5 +1,5 @@
 blueprint:
-  name: Light
+  name: Light.
   description: Turn on/off a light based on occupancy sensor and adaptive lighting switch with configurable delays
   domain: automation
   input:
@@ -64,7 +64,10 @@ trigger:
     entity_id: !input switch
     to: "on"
     for:
+      hours: 0
+      minutes: 0
       seconds: !input sleep_mode_delay
+      milliseconds: 0
     id: "sleep"
 
 action:
