@@ -78,10 +78,11 @@ action:
           - service: light.turn_on
             target:
               entity_id: !input light
-          - delay:
-              hours: 0
-              minutes: 0
-              seconds: 1
+                  - delay:
+                      hours: 0
+                      minutes: 0
+                      seconds: 1
+                      milliseconds: 0
           - service: switch.turn_off
             target:
               entity_id: !input switch
@@ -97,6 +98,7 @@ action:
           hours: 0
           minutes: 0
           seconds: !input occupancy_delay
+          milliseconds: 0
       - condition: state
         entity_id: !input binary_sensor
         state: "off"
