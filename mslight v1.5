@@ -1,6 +1,6 @@
 blueprint:
-  name: Light.
-  description: Turn on/off a light based on occupancy sensor and adaptive lighting switch with configurable delays.
+  name: Light
+  description: Turn on/off a light based on occupancy sensor and adaptive lighting switch with configurable delays
   domain: automation
   input:
     binary_sensor:
@@ -65,9 +65,7 @@ trigger:
     to: "on"
     for:
       seconds: !input sleep_mode_delay
-    id: sleep
-
-condition: []
+    id: "sleep"
 
 action:
   - choose:
@@ -78,11 +76,7 @@ action:
           - service: light.turn_on
             target:
               entity_id: !input light
-          - delay:
-              hours: 0
-              minutes: 0
-              seconds: 1
-              milliseconds: 0
+          - delay: "{{ '00:00:01' }}"
           - service: switch.turn_off
             target:
               entity_id: !input switch
@@ -94,17 +88,11 @@ action:
             target:
               entity_id: !input light
     default:
-      - delay:
-          hours: 0
-          minutes: 0
-          seconds: !input occupancy_delay
-          milliseconds: 0
+      - delay: "{{ '00:00:' + occupancy_delay|string }}"
       - condition: state
         entity_id: !input binary_sensor
         state: "off"
         for:
-          hours: 0
-          minutes: 0
           seconds: !input post_occupancy_delay
       - service: switch.turn_on
         target:
